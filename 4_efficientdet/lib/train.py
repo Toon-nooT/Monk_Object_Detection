@@ -2,6 +2,7 @@ import os
 import argparse
 import torch
 import torch.nn as nn
+import gc
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from src.dataset import CocoDataset, Resizer, Normalizer, Augmenter, collater
@@ -167,7 +168,7 @@ def train(opt):
 
                     torch.onnx.export(model.module, dummy_input,
                                       os.path.join(opt.saved_path, "signatrix_efficientdet_coco.onnx"),
-                                      verbose=False
+                                      verbose=False,opset_version=11
                                       )
                     model.module.backbone_net.model.set_swish(memory_efficient=True)
                 else:
@@ -175,7 +176,7 @@ def train(opt):
 
                     torch.onnx.export(model, dummy_input,
                                       os.path.join(opt.saved_path, "signatrix_efficientdet_coco.onnx"),
-                                      verbose=False
+                                      verbose=False,opset_version=11
                                       )
                     model.backbone_net.model.set_swish(memory_efficient=True)
 
@@ -183,7 +184,8 @@ def train(opt):
             if epoch - best_epoch > opt.es_patience > 0:
                 print("Stop training at epoch {}. The lowest loss achieved is {}".format(epoch, loss))
                 break
-        torch.cuda.empty_cache() 
+        torch.cuda.empty_cache()
+        gc.collect()
     writer.close()
 
 
